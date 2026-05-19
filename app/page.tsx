@@ -101,12 +101,21 @@ export default function Home() {
               key={todo.id}
               className="flex items-center gap-3 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 px-4 py-3 shadow-sm"
             >
-              <input
-                type="checkbox"
-                checked={todo.completed}
-                onChange={() => toggleTodo(todo.id)}
-                className="h-4 w-4 accent-indigo-600 cursor-pointer"
-              />
+              <button
+                onClick={() => toggleTodo(todo.id)}
+                aria-label={todo.completed ? "未完了に戻す" : "完了にする"}
+                className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                  todo.completed
+                    ? "bg-indigo-600 border-indigo-600 text-white"
+                    : "border-zinc-300 dark:border-zinc-500 hover:border-indigo-400"
+                }`}
+              >
+                {todo.completed && (
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 12 10" fill="none">
+                    <path d="M1 5l3.5 3.5L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </button>
               <span
                 className={`flex-1 text-sm ${
                   todo.completed
