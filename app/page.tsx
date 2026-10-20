@@ -4,6 +4,15 @@ import { useState, KeyboardEvent } from "react";
 
 type FilterType = "all" | "active" | "completed";
 
+interface EnvDemoResult {
+  MY_SECRET_KEY: string;
+  DATABASE_URL: string;
+  NEXT_PUBLIC_APP_NAME: string;
+  NEXT_PUBLIC_API_BASE_URL: string;
+  environment: string;
+  timestamp: string;
+}
+
 interface Todo {
   id: number;
   text: string;
@@ -14,6 +23,21 @@ export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [input, setInput] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
+
+  // 環境変数デモ用
+  const [envResult, setEnvResult] = useState<EnvDemoResult | null>(null);
+  const [envLoading, setEnvLoading] = useState(false);
+
+  const fetchEnvDemo = async () => {
+    setEnvLoading(true);
+    try {
+      const res = await fetch("/api/env-demo");
+      const data: EnvDemoResult = await res.json();
+      setEnvResult(data);
+    } finally {
+      setEnvLoading(false);
+    }
+  };
 
   const addTodo = () => {
     const trimmed = input.trim();
@@ -142,6 +166,69 @@ export default function Home() {
             残り {activeCount} 件
           </p>
         )}
+
+        {/* ─── 環境変数デモ ─── */}
+        <section className="mt-12 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-zinc-700 dark:text-zinc-200 mb-1">
+            Vercel 環境変数デモ
+          </h2>
+          <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-4">
+            クライアント変数は即座に参照可。サーバー変数はボタンで API を呼び出して確認します。
+          </p>
+
+          {/* クライアントサイド変数 (NEXT_PUBLIC_) */}
+          <div className="mb-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-indigo-500 mb-2">
+              クライアントサイド (NEXT_PUBLIC_)
+            </h3>
+            <dl className="space-y-1 text-sm">
+              <div className="flex gap-2">
+                <dt className="text-zinc-500 dark:text-zinc-400 w-52 shrink-0">NEXT_PUBLIC_APP_NAME</dt>
+                <dd className="font-mono text-zinc-800 dark:text-zinc-100">
+                  {process.env.NEXT_PUBLIC_APP_NAME ?? "❌ 未設定"}
+                </dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="text-zinc-500 dark:text-zinc-400 w-52 shrink-0">NEXT_PUBLIC_API_BASE_URL</dt>
+                <dd className="font-mono text-zinc-800 dark:text-zinc-100">
+                  {process.env.NEXT_PUBLIC_API_BASE_URL ?? "❌ 未設定"}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          {/* サーバーサイド変数 */}
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-indigo-500 mb-2">
+              サーバーサイド (シークレット) — API Route 経由
+            </h3>
+            <button
+              onClick={fetchEnvDemo}
+              disabled={envLoading}
+              className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm text-white font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors mb-3"
+            >
+              {envLoading ? "取得中…" : "GET /api/env-demo"}
+            </button>
+
+            {envResult && (
+              <dl className="space-y-1 text-sm">
+                {([
+                  ["MY_SECRET_KEY", envResult.MY_SECRET_KEY],
+                  ["DATABASE_URL", envResult.DATABASE_URL],
+                  ["NEXT_PUBLIC_APP_NAME", envResult.NEXT_PUBLIC_APP_NAME],
+                  ["NEXT_PUBLIC_API_BASE_URL", envResult.NEXT_PUBLIC_API_BASE_URL],
+                  ["NODE_ENV", envResult.environment],
+                  ["timestamp", envResult.timestamp],
+                ] as [string, string][]).map(([key, val]) => (
+                  <div key={key} className="flex gap-2">
+                    <dt className="text-zinc-500 dark:text-zinc-400 w-52 shrink-0">{key}</dt>
+                    <dd className="font-mono text-zinc-800 dark:text-zinc-100 break-all">{val}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );
